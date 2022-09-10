@@ -325,9 +325,20 @@ void upload(const QMimeData *source, ChannelPtr channel,
     }
 
     else
-    {  //Dont care if its not an image, try uploading it anyway pretending its a png
-        uploadImageToNuuls({source->data("application/octet-stream"), "png", ""},
-                           channel, outputTextEdit);
+    {  //convert to png
+        QImage image = qvariant_cast<QImage>(source->imageData());	       
+        boost::optional<QByteArray> imageData = convertToPng(image);	                           
+        if (imageData)	
+        {	
+            uploadImageToNuuls({imageData.get(), "png", ""}, channel,	
+                               outputTextEdit);	
+        }	
+        else	
+        {	
+            channel->addMessage(makeSystemMessage(	
+                QString("Cannot upload file, failed to convert to png.")));	
+            uploadMutex.unlock();	
+        }
     }
 }
 
