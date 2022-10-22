@@ -282,11 +282,23 @@ void upload(const QMimeData *source, ChannelPtr channel,
             }
             else
             {
+                // This is a file that's not an image, so we'll just upload it as a file.
                 channel->addMessage(makeSystemMessage(
-                    QString("Cannot upload file: %1. Not an image.")
-                        .arg(localPath)));
-                uploadMutex.unlock();
-                return;
+                    QString("Uploading file: %1").arg(localPath)));
+                QFile file(localPath);
+                bool isOkay = file.open(QIODevice::ReadOnly);
+                if (!isOkay)
+                {
+                    channel->addMessage(
+                        makeSystemMessage(QString("Failed to open file. :(")));
+                    uploadMutex.unlock();
+                    return;
+                }
+                //TODO Change this to a buffered approach in the future
+                RawImageData data = {file.readAll(), mime.preferredSuffix(),localPath};
+                
+                uploadQueue.push(data);
+                file.close();
             }
         }
         if (!uploadQueue.empty())
@@ -313,19 +325,19 @@ void upload(const QMimeData *source, ChannelPtr channel,
     }
 
     else
-    {  // not PNG, try loading it into QImage and save it to a PNG.
-        QImage image = qvariant_cast<QImage>(source->imageData());
-        boost::optional<QByteArray> imageData = convertToPng(image);
-        if (imageData)
-        {
-            uploadImageToNuuls({imageData.get(), "png", ""}, channel,
-                               outputTextEdit);
-        }
-        else
-        {
-            channel->addMessage(makeSystemMessage(
-                QString("Cannot upload file, failed to convert to png.")));
-            uploadMutex.unlock();
+    {  //convert to png
+        QImage image = qvariant_cast<QImage>(source->imageData());	       
+        boost::optional<QByteArray> imageData = convertToPng(image);	                           
+        if (imageData)	
+        {	
+            uploadImageToNuuls({imageData.get(), "png", ""}, channel,	
+                               outputTextEdit);	
+        }	
+        else	
+        {	
+            channel->addMessage(makeSystemMessage(	
+                QString("Cannot upload file, failed to convert to png.")));	
+            uploadMutex.unlock();	
         }
     }
 }
