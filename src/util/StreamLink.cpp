@@ -246,7 +246,7 @@ void openStreamlinkForChannel(const QString &channel)
 
     if (preferredQuality == "high")
     {
-        exclude = ">720p30";
+        exclude = ">720p60";
         quality = "high,best";
     }
     else if (preferredQuality == "medium")
