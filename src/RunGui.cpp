@@ -77,7 +77,7 @@ namespace {
         QApplication::setAttribute(Qt::AA_DisableHighDpiScaling, true);
 #endif
 
-        QApplication::setStyle(QStyleFactory::create("Fusion"));
+        QApplication::setStyle(QStyleFactory::create("Basic"));
 
         QApplication::setWindowIcon(QIcon(":/icon.ico"));
 
